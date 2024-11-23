@@ -1,44 +1,6 @@
-import fs   from "node:fs/promises";
-import ical from "ical";
-
-const calendars = [
-    {
-        url: "https://cloud.timeedit.net/chalmers/web/public/ri617QQQY83Zn4Q5868548Z5y6Z55.ics",
-        name: "Chalmers",
-        rules: [
-            {
-                include: {
-                    other: [ "Laboration" ],
-                },
-                exclude: {
-                    dates: [ "2024-11-25 17:15", "2024-12-13 17:15" ],
-                },
-            },
-            {
-                include: {
-                    codes: [ "DAT038", "TIF085" ],
-                },
-                exclude: {
-                    codes: [ "DAT038", "TIF085" ],
-                },
-                description: "$heading",
-                summary:     "$other",
-                other_sep:   ", ",
-                room:        "$room: $building våning $floor",
-                room_sep:    ", ",
-                rooms:       "$rooms",
-            },
-            {
-                other_sep:   ", ",
-                summary:     "$heading $other",
-                description: "",
-                room:        "$room: $building våning $floor",
-                room_sep:    "\n",
-                rooms:       "$rooms",
-            },
-        ]
-    },
-];
+import { watchFile } from "node:fs";
+import fs            from "node:fs/promises";
+import ical          from "ical";
 
 const getCalendar = async url => {
     const calendar = url.substring(url.lastIndexOf("/") + 1);
@@ -46,13 +8,15 @@ const getCalendar = async url => {
     const filename = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${calendar}`;
 
     return fs.readFile(filename, "utf8")
-        .catch(_ => fetch(url)
-            .then(response => response.text())
-            .then(data => {
-                fs.writeFile(filename, data);
-                return data;
-            })
-        );
+        .catch(_ => {
+            console.log(`Downloading calendar from ${url}`);
+            return fetch(url)
+                .then(response => response.text())
+                .then(data => {
+                    fs.writeFile(filename, data);
+                    return data;
+                });
+        });
 };
 
 const parseEvents = data => Object.values(ical.parseICS(data))
@@ -119,7 +83,7 @@ const matchesRule = (event, rule) => {
     return passes;
 };
 
-calendars.forEach(({ url, name, rules, }) => getCalendar(url)
+const processCalendar = ({ url, name, rules, }) => getCalendar(url)
     .then(parseEvents)
     .then(events => events
         .map(event => ({ event: event, rule: rules.find(rule => matchesRule(event, rule)), }))
@@ -167,5 +131,21 @@ calendars.forEach(({ url, name, rules, }) => getCalendar(url)
             output += "END:VEVENT\n";
         });
         output += "END:VCALENDAR\n";
+
+        console.log(`Saving ${name}.ical`);
         fs.writeFile(`${name}.ical`, output);
-    }));
+    });
+
+const processCalendars = () => {
+    console.log("Generating calendars");
+    fs.readFile("calendars.json", "utf8")
+        .then(data => JSON.parse(data))
+        .then(calendars => calendars.forEach(processCalendar))
+};
+
+processCalendars();
+watchFile("calendars.json", (current, previous) => {
+    if (current.mtime > previous.mtime) {
+        processCalendars();
+    }
+});
