@@ -18,20 +18,20 @@
                 "exclude": {
                     "codes": [ "DAT038", "TIF085" ]
                 },
-                "description": "$heading",
-                "summary":     "$other",
+                "description": "$heading$",
+                "summary":     "$other$",
                 "other_sep":   ", ",
-                "room":        "$room: $building våning $floor",
+                "room":        "$room$: $building$ våning $floor$",
                 "room_sep":    ", ",
-                "rooms":       "$rooms"
+                "rooms":       "$rooms$"
             },
             {
                 "other_sep":   ", ",
-                "summary":     "$heading $other",
+                "summary":     "$heading$ $other$",
                 "description": "",
-                "room":        "$room: $building våning $floor",
+                "room":        "$room$: $building$ våning $floor$",
                 "room_sep":    "\n",
-                "rooms":       "$rooms"
+                "rooms":       "$rooms$"
             }
         ]
     }

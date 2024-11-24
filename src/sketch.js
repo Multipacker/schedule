@@ -118,16 +118,16 @@ const processCalendar = ({ url, name, rules, }) => getCalendar(url)
         .map(({ event, rule, }) => {
             const rooms = event.locations
                 .map(entry => rule.room
-                    .replace(/\$room/g,     entry.room)
-                    .replace(/\$floor/g,    entry.floor)
-                    .replace(/\$building/g, entry.building))
+                    .replace(/\$room\$/g,     entry.room)
+                    .replace(/\$floor\$/g,    entry.floor)
+                    .replace(/\$building\$/g, entry.building))
                 .join(rule.room_sep);
             const other = event.other.join(rule.other_sep);
 
             const fillPattern = pattern => pattern
-                .replace(/\$heading/g, event.heading)
-                .replace(/\$other/g,   other)
-                .replace(/\$rooms/g,   rooms);
+                .replace(/\$heading\$/g, event.heading)
+                .replace(/\$other\$/g,   other)
+                .replace(/\$rooms\$/g,   rooms);
 
             return {
                 summary:     fillPattern(rule.summary),
