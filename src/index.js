@@ -121,8 +121,8 @@ const processCalendar = ({ url, name, rules, }) => getCalendar(url)
                     .replace(/\$room\$/g,     entry.room)
                     .replace(/\$floor\$/g,    entry.floor)
                     .replace(/\$building\$/g, entry.building))
-                .join(rule.room_sep);
-            const other = event.other.join(rule.other_sep);
+                .join(rule.roomSep);
+            const other = event.other.join(rule.otherSep);
 
             const fillPattern = pattern => pattern
                 .replace(/\$heading\$/g, event.heading)
