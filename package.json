@@ -1,5 +1,24 @@
 {
+  "name": "schedule",
+  "version": "0.0.1",
+  "main": "src/index.js",
+  "description": "",
+  "author": "Simon Renhult <simon.renhult@hotmail.se>",
+  "license": "MIT",
+  "type": "module",
+  "private": "true",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Multipacker/schedule.git"
+  },
   "dependencies": {
-    "ical": "^0.8.0"
+    "ical": "0.8.0"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "build": "ncc build src/index.js --minify --no-cache --license LICENSE --target es2023"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "0.38.3"
   }
 }
