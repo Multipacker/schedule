@@ -1,11 +1,27 @@
-import { watchFile } from "node:fs";
-import fs            from "node:fs/promises";
-import ical          from "ical";
+import fsSync from "node:fs";
+import fs     from "node:fs/promises";
+import path   from "path";
+import ical   from "ical";
+
+const config = await fs.readFile("config.json")
+    .then(
+        JSON.parse,
+        error => {}
+    );
+
+const ensureConfigDirectory = directory => {
+    if (directory !== undefined && !fsSync.existsSync(directory)) {
+        fsSync.mkdirSync(directory, { recursive: true, });
+    }
+};
+
+ensureConfigDirectory(config.cacheDirectory);
+ensureConfigDirectory(config.calendarDirectory);
 
 const getCalendar = async url => {
     const calendar = url.substring(url.lastIndexOf("/") + 1);
     const date     = new Date();
-    const filename = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${calendar}`;
+    const filename = path.join(config.cacheDirectory ?? ".", `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${calendar}`);
 
     return fs.readFile(filename, "utf8")
         .catch(_ => {
@@ -132,19 +148,59 @@ const processCalendar = ({ url, name, rules, }) => getCalendar(url)
         });
         output += "END:VCALENDAR\n";
 
-        console.log(`Saving ${name}.ical`);
-        fs.writeFile(`${name}.ical`, output);
+        const filename = path.join(config.calendarDirectory ?? ".", `${name}.ical`);
+        console.log(`Saving ${filename}`);
+        fs.writeFile(filename, output);
     });
 
 const processCalendars = () => {
     console.log("Generating calendars");
     fs.readFile("calendars.json", "utf8")
-        .then(data => JSON.parse(data))
+        .then(
+            JSON.parse,
+            error => {
+                console.log(`Could not read 'calendars.json'\n\t${error}`);
+                return [];
+            }
+        )
         .then(calendars => calendars.forEach(processCalendar))
 };
 
+const clearCache = () => {
+    console.log("Clearing cache");
+    const date           = new Date();
+    const filenamePrefix = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-`;
+    const directory      = config.cacheDirectory ?? ".";
+    const filenameRegex  = new RegExp(/^\d+-\d{1,2}-\d{1,2}-.+\.ics$/);
+
+    fs.readdir(directory).then(
+        files => {
+            files
+                .filter(file => !file.startsWith(filenamePrefix) && filenameRegex.test(file))
+                .forEach(file => {
+                    const filename = path.join(directory, file);
+                    console.log(`Deleting ${filename}`);
+                    fs.unlink(filename).catch(error => console.log(`Could not delete ${filename}\n\t${error}`));
+                });
+        },
+        error => {
+            console.log(`Could not read cached files in '${directory}\n\t${error}'`);
+        }
+    );
+};
+
+setInterval(
+    processCalendars,
+    1000 * 60 * (config.generateInterval ?? 60 * 24)
+);
+
+setInterval(
+    clearCache,
+    1000 * 60 * (config.cacheClearInterval ?? 60 * 24)
+);
+
 processCalendars();
-watchFile("calendars.json", (current, previous) => {
+fsSync.watchFile("calendars.json", { interval: (config.configReloadInterval ?? 10) * 1000}, (current, previous) => {
     if (current.mtime > previous.mtime) {
         processCalendars();
     }
