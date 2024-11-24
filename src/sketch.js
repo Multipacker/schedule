@@ -166,7 +166,7 @@ const processCalendar = ({ url, name, rules, }) => getCalendar(url)
         });
         output += "END:VCALENDAR\r\n";
 
-        const filename = path.join(config.calendarDirectory, `${name}.ical`);
+        const filename = path.join(config.calendarDirectory, `${name}.ics`);
         console.log(`Saving ${filename}`);
         fs.writeFile(filename, output);
     });
