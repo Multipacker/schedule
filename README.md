@@ -144,3 +144,5 @@ events that don't match either. The produces calendar will be named
 * Allow using multiple calendars as sources for one generated calendar.
 * Allow specifying common formatting rules at the calendar level so you don't
   have to repeat them per rule.
+* Allow more placeholders in format-strings.
+* Keep the original values for each field in case the user wants to keep them.
