@@ -148,7 +148,7 @@ const processCalendar = ({ url, name, rules, }) => getCalendar(url)
         output += "BEGIN:VCALENDAR\r\n";
         output += "VERSION:2.0\r\n";
         output += "METHOD:PUBLISH\r\n";
-        output += `X-WR-CALNAME:${escape(name)}`
+        output += `X-WR-CALNAME:${escape(name)}\r\n`
         output += `X-PUBLISHED-TTL:P${config.generateInterval}M\r\n`
         output += "CALSCALE:GREGORIAN\r\n";
         output += `PRODID:Schedule\r\n`
