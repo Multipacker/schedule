@@ -1,0 +1,30 @@
+services:
+  schedule:
+    build: .
+    environment:
+      TZ: Europe/Stockholm
+    volumes:
+      - type: bind
+        source: ./config.json
+        target: /app/config.json
+        read_only: true
+      - type: bind
+        source: ./calendars.json
+        target: /app/calendars.json
+        read_only: false
+      - calendars:/app/calendars
+  nginx:
+    image: nginx:alpine3.20
+    environment:
+      TZ: Europe/Stockholm
+    ports:
+      - 80:80
+    volumes:
+      - type: bind
+        source: ./nginx.conf
+        target: /etc/nginx/conf.d/default.conf
+        read_only: true
+      - calendars:/var/calendars
+
+volumes:
+  calendars:
