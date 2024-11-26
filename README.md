@@ -136,6 +136,13 @@ events that don't match either. The produces calendar will be named
 }
 ```
 
+There is also a complete example in the examples directory. It uses docker
+compose and nginx and can be run with the following command:
+
+```sh
+docker compose -f examples/docker-compose.yml up
+```
+
 ## TODO
 
 * Use `X-PUBLISHED-TTL` from source calendars to know when to evict the cache

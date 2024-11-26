@@ -1,6 +1,6 @@
 services:
   schedule:
-    build: .
+    build: ..
     environment:
       TZ: Europe/Stockholm
     volumes:
