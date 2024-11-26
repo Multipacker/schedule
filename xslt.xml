@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+    <xsl:output method="html" doctype-system="about:legacy-compat" />
+    <xsl:template match="/">
+        <html>
+            <head>
+                <title>Schedule</title>
+                <style>
+                    @media (prefers-color-scheme: dark) {
+                        :root {
+                            color:            #e9ecef;
+                            background-color: #212529;
+                            --accent-color:   #343a40;
+                        }
+                    }
+
+                    @media (prefers-color-scheme: light) {
+                        :root {
+                            color:            #212529;
+                            background-color: #f1f3f5;
+                            --accent-color:   #e9ecef;
+                        }
+                    }
+                    main {
+                        width:  min(50em, 100%);
+                        margin: auto;
+                    }
+                    a {
+                        color:                inherit;
+                        font-variant:         small-caps;
+                        text-decoration-line: none;
+                    }
+                    hr {
+                        color: var(--accent-color);
+                    }
+                    h1 {
+                        font-family: sans-serif;
+                    }
+                </style>
+            </head>
+            <body>
+                <main>
+                    <h1>Schedules</h1>
+                    <hr />
+                    <table style="width: 90%; margin: auto;">
+                        <xsl:for-each select="list/*">
+                            <xsl:sort select="." />
+                            <xsl:variable name="name">
+                                <xsl:value-of select="." />
+                            </xsl:variable>
+                            <xsl:variable name="size">
+                                <xsl:choose>
+                                    <xsl:when test="round(@size div 1024 div 1024) >= 1"><xsl:value-of select="format-number(@size div 1024 div 1024, 0)"/>M</xsl:when>
+                                    <xsl:when test="round(@size div 1024) >= 1"><xsl:value-of select="format-number(@size div 1024, 0)"/>K</xsl:when>
+                                    <xsl:otherwise><xsl:value-of select="@size"/></xsl:otherwise>
+                                </xsl:choose>
+                            </xsl:variable>
+                            <xsl:variable name="date">
+                                <xsl:value-of select="substring(@mtime, 1, 10)"/>
+                            </xsl:variable>
+                            <tr>
+                                <td><a href="{$name}"><xsl:value-of select="$name" /></a></td>
+                                <td><xsl:value-of select="$size" /></td>
+                                <td style="text-align: right;"><xsl:value-of select="$date" /></td>
+                            </tr>
+                        </xsl:for-each>
+                    </table>
+                </main>
+            </body>
+        </html>
+    </xsl:template>
+</xsl:stylesheet>

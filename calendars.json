@@ -1,7 +1,7 @@
 [
     {
         "url": "https://cloud.timeedit.net/chalmers/web/public/ri617QQQY83Zn4Q5868548Z5y6Z55.ics",
-        "name": "chalmers",
+        "name": "spanner",
         "rules": [
             {
                 "include": {
@@ -17,17 +17,17 @@
                 },
                 "description": "$heading$",
                 "summary":     "$other$",
-                "otherSep":   ", ",
+                "otherSep":    ", ",
                 "room":        "$room$: $building$ våning $floor$",
-                "roomSep":    ", ",
+                "roomSep":     ", ",
                 "rooms":       "$rooms$"
             },
             {
-                "otherSep":   ", ",
+                "otherSep":    ", ",
                 "summary":     "$heading$ $other$",
                 "description": "",
                 "room":        "$room$: $building$ våning $floor$",
-                "roomSep":    "\n",
+                "roomSep":     "\n",
                 "rooms":       "$rooms$"
             }
         ]
