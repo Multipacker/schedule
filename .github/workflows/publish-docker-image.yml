@@ -11,9 +11,12 @@ env:
 
 jobs:
   build:
-    runs-on:
-      - ubuntu-latest
-      - arm64
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        platform:
+          - linux/arm64
+          - linux/amd64
     permissions:
       contents: read
       packages: write
