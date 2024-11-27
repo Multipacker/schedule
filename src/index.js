@@ -120,11 +120,11 @@ const processCalendar = ({ url, name, rules, }) => getCalendar(url)
         .filter(({ rule, }) => rule !== undefined && !(rule.summary === undefined && rule.description === undefined && rule.rooms === undefined))
         .map(({ event, rule, }) => {
             const courses = event.names
-                .map(course => rule.course ?? ""
+                .map(course => (rule.course ?? "")
                     .replace(/\$code\$/g, course.code)
                     .replace(/\$name\$/g, course.name))
                 .join(rule.courseSep);
-            const rooms = event.locations ?? ""
+            const rooms = (event.locations ?? "")
                 .map(entry => rule.room
                     .replace(/\$room\$/g,     entry.room)
                     .replace(/\$floor\$/g,    entry.floor)
