@@ -15,17 +15,18 @@
                 "include": {
                     "codes": [ "DAT038", "TIF085" ]
                 },
+                "course":      "$code$",
+                "courseSep":   ", ",
                 "description": "$heading$",
-                "summary":     "$other$",
+                "summary":     "$courses$: $other$",
                 "otherSep":    ", ",
                 "room":        "$room$: $building$ våning $floor$",
                 "roomSep":     ", ",
                 "rooms":       "$rooms$"
             },
             {
-                "otherSep":    ", ",
-                "summary":     "$heading$ $other$",
-                "description": "",
+                "summary":     "$rawSummary$",
+                "description": "$rawDescription$",
                 "room":        "$room$: $building$ våning $floor$",
                 "roomSep":     "\n",
                 "rooms":       "$rooms$"

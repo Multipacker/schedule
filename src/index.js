@@ -75,6 +75,9 @@ const parseEvents = data => Object.values(ical.parseICS(data))
             locations: locations,
             start:     event.start,
             end:       event.end,
+            rawSummary:     event.summary,
+            rawDescription: event.description,
+            rawLocation:    event.location,
         };
     });
 
@@ -116,7 +119,12 @@ const processCalendar = ({ url, name, rules, }) => getCalendar(url)
         .map(event => ({ event: event, rule: rules.find(rule => matchesRule(event, rule)), }))
         .filter(({ rule, }) => rule !== undefined && !(rule.summary === undefined && rule.description === undefined && rule.rooms === undefined))
         .map(({ event, rule, }) => {
-            const rooms = event.locations
+            const courses = event.names
+                .map(course => rule.course ?? ""
+                    .replace(/\$code\$/g, course.code)
+                    .replace(/\$name\$/g, course.name))
+                .join(rule.courseSep);
+            const rooms = event.locations ?? ""
                 .map(entry => rule.room
                     .replace(/\$room\$/g,     entry.room)
                     .replace(/\$floor\$/g,    entry.floor)
@@ -125,9 +133,13 @@ const processCalendar = ({ url, name, rules, }) => getCalendar(url)
             const other = event.other.join(rule.otherSep);
 
             const fillPattern = pattern => pattern
+                .replace(/\$courses\$/g, courses)
                 .replace(/\$heading\$/g, event.heading)
                 .replace(/\$other\$/g,   other)
-                .replace(/\$rooms\$/g,   rooms);
+                .replace(/\$rooms\$/g,   rooms)
+                .replace(/\$rawSummary\$/g,     event.rawSummary)
+                .replace(/\$rawDescription\$/g, event.rawDescription)
+                .replace(/\$rawRooms\$/g,       event.rawLocation);
 
             return {
                 summary:     fillPattern(rule.summary),

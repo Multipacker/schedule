@@ -74,11 +74,15 @@ unwanted events.
 
 The fields take a string pattern that can contain the following placeholders:
 
+* `$courses$`: The courses that this event belongs to.
 * `$heading$`: What the event is about. This matches with the "Rubrik" field on
   TimeEdit.
 * `$other$`: Other information, usually what kind of event it is (lab, lecture,
   etc.).
 * `$rooms$`: Which rooms the event takes place in.
+* `$rawSummary$`: The original summary from the calendar.
+* `$rawDescription$`: The original description from the calendar.
+* `$rawLocation$`: The original location from the calendar.
 
 For more fine grained formatting, there is also `otherSep` for specifying the
 separator between different items in other. You can also specify how rooms are
@@ -88,6 +92,13 @@ formatted with the following options:
   `$building$` and `$floor$` to specify which rooms it is. Note that all of
   these aren't always available.
 * `roomSep`: Specifies the separator to use between rooms.
+
+There are similar formatting options for courses:
+
+* `course`: Specifies how to format a single course. Can include `$code$` and
+  `$name$`.
+* `courseSep`: Specifies the separator to use between courses.
+
 
 ### Rational
 
