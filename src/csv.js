@@ -103,9 +103,9 @@ const parseCsv = (data, firstLine) => {
             throw new Error(`Record on line ${line} has too ${record.length < header.length ? "few" : "many"} fields. Expected ${header.length} but got ${record.length}.`);
         }
 
-        let object = {};
+        let object = new Map();
         for (let j = 0; j < header.length; ++j) {
-            object[header[j]] = record[j];
+            object.set(header[j], record[j]);
         }
 
         objects.push(object);
