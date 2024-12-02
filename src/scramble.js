@@ -1,4 +1,4 @@
-let tabledata = [
+const tabledata = [
     [ 'h=t&sid=',           '6='  ],
     [ 'objects=',           '1='  ],
     [ 'sid=',               '2='  ],
@@ -6,7 +6,8 @@ let tabledata = [
     [ '&types=0&fe=0',      '5=5' ],
     [ '&h=t&p=',            '4='  ]
 ];
-let tabledataspecial = [
+
+const tabledataspecial = [
     [ '=', 'ZZZX1' ],
     [ '&', 'ZZZX2' ],
     [ ',', 'ZZZX3' ],
@@ -16,7 +17,8 @@ let tabledataspecial = [
     [ '/', 'ZZZX7' ],
     [ '%', 'ZZZX8' ]
 ];
-let pairs = [
+
+const pairs = [
     [ '=', 'Q' ],
     [ '&', 'Z' ],
     [ ',', 'X' ],
@@ -24,20 +26,18 @@ let pairs = [
     [ ' ', 'V' ],
     [ '-', 'W' ]
 ];
-let pattern = [
-    4, 22, 5, 37, 26, 17, 33, 15,
-    39, 11, 45, 20, 2, 40, 19, 36,
-    28, 38, 30, 41, 44, 42, 7, 24,
-    14, 27, 35, 25, 12, 1, 43, 23,
-    6, 16, 3, 9, 47, 46, 48, 50,
-    21, 10, 49, 32, 18, 31, 29, 34,
-    13, 8
+
+const pattern = [
+    4,  22, 5,  37, 26, 17, 33, 15, 39, 11,
+    45, 20, 2,  40, 19, 36, 28, 38, 30, 41,
+    44, 42,  7, 24, 14, 27, 35, 25, 12, 1,
+    43, 23, 6,  16, 3,  9,  47, 46, 48, 50,
+    21, 10, 49, 32, 18, 31, 29, 34, 13, 8
 ];
 
 function untablespecial(result) {
-    for (var i = 0; i < 100; i++) {
-        for (var index = tabledataspecial.length - 1; index >= 0 ; --index) {
-            var key = tabledataspecial[index];
+    for (let i = 0; i < 100; i++) {
+        for (const key of tabledataspecial.reverse()) {
             result = result.replace(key[1], key[0]);
         }
     }
@@ -45,9 +45,8 @@ function untablespecial(result) {
 }
 
 function tablespecial(result) {
-    for (var i = 0; i < 100; i++) {
-        for (var index = 0; index < tabledataspecial.length; index++) {
-            var key = tabledataspecial[index];
+    for (let i = 0; i < 100; i++) {
+        for (const key of tabledataspecial) {
             result = result.replace(key[0], key[1]);
         }
     }
@@ -55,16 +54,14 @@ function tablespecial(result) {
 }
 
 function untableshort(result) {
-    for (var index = tabledata.length - 1; index >= 0; --index) {
-        var key = tabledata[index];
+    for (const key of tabledata.reverse()) {
         result = result.replace(key[1], key[0]);
     }
     return result;
 }
 
 function tableshort(result) {
-    for (var index = 0; index < tabledata.length; index++) {
-        var key = tabledata[index];
+    for (const key of tabledata) {
         result = result.replace(key[0], key[1]);
     }
     return result;
@@ -91,8 +88,7 @@ function modKey(ch) {
 }
 
 function unscrambleChar(ch) {
-    for (var index = 0; index < pairs.length; index++) {
-        var pair = pairs[index];
+    for (const pair of pairs) {
         if (ch === pair[1]) {
             return pair[0];
         }
@@ -104,8 +100,7 @@ function unscrambleChar(ch) {
 }
 
 function scrambleChar(ch) {
-    for (var index = 0; index < pairs.length; index++) {
-        var pair = pairs[index];
+    for (const pair of pairs) {
         if (ch === pair[0]) {
             return pair[1];
         }
@@ -123,15 +118,14 @@ function swap(result, from, to) {
     if ((to < 0) || (to >= result.length)) {
         return;
     }
-    var fromChar = result[from];
+    const fromChar = result[from];
     result[from] = result[to];
     result[to] = fromChar;
 }
 
 function unswapPattern(result) {
-    var steps = result.length;
-    for (var step = 0; step < steps; step++) {
-        for (var index = pattern.length - 1; index >= 1; index -= 2) {
+    for (let step = 0; step < result.length; step++) {
+        for (let index = pattern.length - 1; index >= 1; index -= 2) {
             swap(
                 result,
                 pattern[index] + step * pattern.length,
@@ -142,9 +136,8 @@ function unswapPattern(result) {
 }
 
 function swapPattern(result) {
-    var steps = Math.ceil(result.length, pattern.length);
-    for (var step = 0; step < steps; step++) {
-        for (var index = 1; index < pattern.length; index += 2) {
+    for (let step = 0; step < result.length; step++) {
+        for (let index = 1; index < pattern.length; index += 2) {
             swap(
                 result,
                 pattern[index] + step * pattern.length,
@@ -155,19 +148,13 @@ function swapPattern(result) {
 }
 
 function unswapChar(result) {
-    var split = result.split('');
+    const split = result.split('');
     unswapPattern(split);
-    for (var index = 0; index < split.length; index++) {
-        split[index] = unscrambleChar(split[index]);
-    }
-    return split.join('');
+    return split.map(unscrambleChar).join('');
 }
 
 function swapChar(result) {
-    var split = result.split('');
-    for (var index = 0; index < split.length; index++) {
-        split[index] = scrambleChar(split[index]);
-    }
+    const split = result.split('').map(scrambleChar);
     swapPattern(split);
     return split.join('');
 }
@@ -201,16 +188,15 @@ function unscramble(query) {
 }
 
 function encode(url, keyValues, extra) {
-    for (var index = 0; index < keyValues.length; index++) {
-        keyValues[index] = toString(keyValues[index]).replace(/[+]/g, ' ');
-    }
-    var lastSlash = toString(url).lastIndexOf('/');
-    var page = url.substring(lastSlash + 1);
+    keyValues = keyValues.map(value => toString(value).replace(/[+]/g, ' '));
+
+    const lastSlash = toString(url).lastIndexOf('/');
+    const page = url.substring(lastSlash + 1);
     if (page.indexOf('r') !== 0) {
         return url + '?i=' + scramble(keyValues.join('&') + toString(extra));
     }
-    var dot = '.html';
-    var lastDot = toString(url).lastIndexOf('.');
+    let dot = '.html';
+    const lastDot = toString(url).lastIndexOf('.');
 
     if (lastDot != - 1) {
         dot = url.substring(lastDot, url.length);
@@ -224,14 +210,14 @@ function encode(url, keyValues, extra) {
 
 // NOTE(simon): Not complete
 function decode(url) {
-    var lastSlash = url.lastIndexOf('/');
+    const lastSlash = url.lastIndexOf('/');
     var lastDot   = url.lastIndexOf('.');
 
     if (lastDot === -1) {
         lastDot = url.length;
     }
 
-    var part = url.substring(lastSlash + 1 + 2, lastDot);
+    const part = url.substring(lastSlash + 1 + 2, lastDot);
     return unscramble(part);
 }
 
