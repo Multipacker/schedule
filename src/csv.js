@@ -9,6 +9,11 @@ const parseCsv = (data, firstLine) => {
         while (i < data.length) {
             let field = "";
 
+            // NOTE(simon): Skip leading whitespace
+            while (data.at(i) === ' ') {
+                ++i;
+            }
+
             if (data.at(i) === '"') {
                 ++i;
 
@@ -26,6 +31,11 @@ const parseCsv = (data, firstLine) => {
                         ++i
                     }
                 }
+
+                // NOTE(simon): Consume trailing whitespace.
+                while (data.at(i) === ' ') {
+                    ++i;
+                }
             } else {
                 while (i < data.length && !'",\n\r'.includes(data.at(i))) {
                     field += data.at(i);
@@ -33,7 +43,7 @@ const parseCsv = (data, firstLine) => {
                 }
             }
 
-            record.push(field);
+            record.push(field.trim());
 
             if (data.at(i) === ',') {
                 ++i;
