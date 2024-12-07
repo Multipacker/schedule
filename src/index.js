@@ -1,8 +1,10 @@
-import fsSync from "node:fs";
+import crypto from "crypto";
 import fs     from "node:fs/promises";
-import path   from "path";
-import ical   from "ical";
+import fsSync from "node:fs";
 import os     from "os";
+import path   from "path";
+
+import { getEvents } from "./timeedit.js";
 
 const config = await fs.readFile("config.json")
     .then(
@@ -29,67 +31,31 @@ const ensureConfigDirectory = directory => {
 ensureConfigDirectory(config.cacheDirectory);
 ensureConfigDirectory(config.calendarDirectory);
 
-const getCalendar = async url => {
-    const calendar = url.substring(url.lastIndexOf("/") + 1);
-    const date     = new Date();
-    const filename = path.join(config.cacheDirectory, `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${calendar}`);
+const getCalendar = async urls => {
+    const hash = crypto.createHmac("sha256", "schedule")
+        .update(urls.sort().join(" "))
+        .digest("hex")
+    console.log(hash);
+    const filename = path.join(config.cacheDirectory, `${hash}.json`);
 
     return fs.readFile(filename, "utf8")
-        .catch(_ => {
-            console.log(`Downloading calendar from ${url}`);
-            return fetch(url)
-                .then(response => response.text())
-                .then(data => {
-                    fs.writeFile(filename, data);
-                    return data;
-                });
-        });
+        .then(JSON.parse)
+        .then(events => events.map(event => {
+            event.start = new Date(event.start);
+            event.end   = new Date(event.end);
+            return event;
+        }))
+        .catch(_ => new Promise((resolve, reject) => resolve(getEvents(urls))).then(data => {
+            fs.writeFile(filename, JSON.stringify(data));
+            return data;
+        }));
 };
-
-const parseEvents = data => Object.values(ical.parseICS(data))
-    .filter(event => event.type === "VEVENT")
-    .map(event => {
-        const names = event.summary
-            .split(",")
-            .map(part => part.trim().match("Kurskod: ([^.]+). Kursnamn: (.+)"))
-            .filter(match => match != null)
-            .map(match => ({ code: match[1], name: match[2], }));
-
-        const heading = (event.summary.match("Rubrik: ([^,]+)") ?? ["", ""])[1];
-
-        const other = event.summary
-            .split(",")
-            .filter(part => !part.includes(":"))
-            .map(part => part.trim());
-
-        const locations = event.location
-            .split("\n")
-            .map(line => line.trim().match("^([^.]+). Byggnad: ([^.]+)(. Våningsplan: (.+))?"))
-            .filter(match => match != null)
-            .map(match => ({ room: match[1], building: match[2], floor: match[4] ?? "", }));
-
-        return {
-            names:     names,
-            heading:   heading,
-            other:     other,
-            locations: locations,
-            start:     event.start,
-            end:       event.end,
-            rawSummary:     event.summary,
-            rawDescription: event.description,
-            rawLocation:    event.location,
-        };
-    });
 
 const matchesFilter = (event, filters) => {
     let passes = true;
 
     if (filters.codes !== undefined) {
-        passes &= event.names.some(entry => filters.codes.includes(entry.code));
-    }
-
-    if (filters.other !== undefined) {
-        passes &= event.other.some(other => filters.other.includes(other));
+        passes &= event.courses.some(entry => filters.codes.includes(entry.code));
     }
 
     if (filters.dates !== undefined) {
@@ -113,33 +79,27 @@ const matchesRule = (event, rule) => {
     return passes;
 };
 
-const processCalendar = ({ url, name, rules, }) => getCalendar(url)
-    .then(parseEvents)
+const processCalendar = ({ urls, name, rules, }) => getCalendar(urls)
     .then(events => events
         .map(event => ({ event: event, rule: rules.find(rule => matchesRule(event, rule)), }))
         .filter(({ rule, }) => rule !== undefined && !(rule.summary === undefined && rule.description === undefined && rule.rooms === undefined))
         .map(({ event, rule, }) => {
-            const courses = event.names
+            const courses = event.courses
                 .map(course => (rule.course ?? "")
                     .replace(/\$code\$/g, course.code)
                     .replace(/\$name\$/g, course.name))
                 .join(rule.courseSep);
-            const rooms = (event.locations ?? "")
+            const rooms = (event.rooms ?? "")
                 .map(entry => rule.room
                     .replace(/\$room\$/g,     entry.room)
                     .replace(/\$floor\$/g,    entry.floor)
                     .replace(/\$building\$/g, entry.building))
                 .join(rule.roomSep);
-            const other = event.other.join(rule.otherSep);
 
             const fillPattern = pattern => pattern
                 .replace(/\$courses\$/g, courses)
                 .replace(/\$heading\$/g, event.heading)
-                .replace(/\$other\$/g,   other)
-                .replace(/\$rooms\$/g,   rooms)
-                .replace(/\$rawSummary\$/g,     event.rawSummary)
-                .replace(/\$rawDescription\$/g, event.rawDescription)
-                .replace(/\$rawRooms\$/g,       event.rawLocation);
+                .replace(/\$rooms\$/g,   rooms);
 
             return {
                 summary:     fillPattern(rule.summary),

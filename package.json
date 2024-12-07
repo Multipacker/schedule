@@ -11,9 +11,6 @@
     "type": "git",
     "url": "git://github.com/Multipacker/schedule.git"
   },
-  "dependencies": {
-    "ical": "0.8.0"
-  },
   "scripts": {
     "start": "node src/index.js",
     "build": "ncc build src/index.js --minify --no-cache --license LICENSE --target es2023"
