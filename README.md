@@ -12,14 +12,12 @@ There are some general settings that can be configured in `config.json`. This
 configuration is not hot-reloadable and needs a restart to apply. It consist of
 a single object with the following fields:
 
-* `cacheClearInterval`: The amount of time in minutes to wait between clearing
-  cached files (defaults to 1440).
 * `cacheDirectory`: Directory to place downloaded `.ics` files into (defaults
   is `.`).
 * `calendarDirectory`: Directory to place generates `.ics` files into (default
   is `.`).
-* `generateInterval`: The amount of time in minutes to wait between generating
-  new calendars (defaults to 1440).
+* `regenerateInterval`: The amount of time in minutes to wait between generating
+  new calendars (defaults to 20).
 
 Example configuration that changes where cached files and generated calendars
 are stored.
@@ -58,8 +56,6 @@ one item from each specified array. The available arrays are:
 
 * `codes`: Course codes.
 * `dates`: Dates.
-* `other`: Other information, usually what kind of event it is (lab, lecture,
-  etc.).
 
 If an event matches a rule, it will use the formatting specified by the rule. The
 following fields of an event can be set:
@@ -77,16 +73,9 @@ The fields take a string pattern that can contain the following placeholders:
 * `$courses$`: The courses that this event belongs to.
 * `$heading$`: What the event is about. This matches with the "Rubrik" field on
   TimeEdit.
-* `$other$`: Other information, usually what kind of event it is (lab, lecture,
-  etc.).
 * `$rooms$`: Which rooms the event takes place in.
-* `$rawSummary$`: The original summary from the calendar.
-* `$rawDescription$`: The original description from the calendar.
-* `$rawLocation$`: The original location from the calendar.
 
-For more fine grained formatting, there is also `otherSep` for specifying the
-separator between different items in other. You can also specify how rooms are
-formatted with the following options:
+You can also specify how rooms are formatted with the following options:
 
 * `room`: Specifies how to format a single room. Can include `$room$`,
   `$building$` and `$floor$` to specify which rooms it is. Note that all of
@@ -119,9 +108,6 @@ events that don't match either. The produces calendar will be named
     "name": "example"
     "rules": [
         {
-            "include": {
-                "other": [ "Laboration" ]
-            },
             "exclude": {
                 "dates": [ "2024-11-25 17:15", "2024-12-13 17:15" ]
             }
@@ -130,15 +116,11 @@ events that don't match either. The produces calendar will be named
             "include": {
                 "codes": [ "ABC123" ]
             },
-            "summary":     "$other$",
             "description": "$heading$",
-            "otherSep":    ", ",
             "room":        "$room$: $building$ floor $floor$",
             "rooms":       "$rooms$"
         }
         {
-            "otherSep": ", ",
-            "summary":   "$heading$ $other$",
             "room":      "$room$: $building$ floor $floor$",
             "roomSep":  "\n",
             "rooms":     "$rooms$"

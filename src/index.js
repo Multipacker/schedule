@@ -16,10 +16,9 @@ const config = await fs.readFile("config.json")
     )
     // NOTE(simon): Fill in defaults for values that are not specified.
     .then(data => ({
-        cacheClearInterval: data.cacheClearInterval ?? 60 * 24,
         cacheDirectory:     data.cacheDirectory     ?? ".",
         calendarDirectory:  data.calendarDirectory  ?? ".",
-        generateInterval:   data.generateInterval   ?? 60 * 24,
+        regenerateInterval: data.regenerateInterval ?? 20,
     }));
 
 const ensureConfigDirectory = directory => {
@@ -35,7 +34,6 @@ const getCalendar = async urls => {
     const hash = crypto.createHmac("sha256", "schedule")
         .update(urls.sort().join(" "))
         .digest("hex")
-    console.log(hash);
     const filename = path.join(config.cacheDirectory, `${hash}.json`);
 
     return fs.readFile(filename, "utf8")
@@ -96,7 +94,7 @@ const processCalendar = ({ urls, name, rules, }) => getCalendar(urls)
                     .replace(/\$building\$/g, entry.building))
                 .join(rule.roomSep);
 
-            const fillPattern = pattern => pattern
+            const fillPattern = pattern => (pattern ?? "")
                 .replace(/\$courses\$/g, courses)
                 .replace(/\$heading\$/g, event.heading)
                 .replace(/\$rooms\$/g,   rooms);
@@ -158,28 +156,26 @@ const processCalendars = () => {
 
 const clearCache = () => {
     console.log("Clearing cache");
-    const date           = new Date();
-    const filenamePrefix = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-`;
-    const filenameRegex  = new RegExp(/^\d+-\d{1,2}-\d{1,2}-.+\.ics$/);
-
     fs.readdir(config.cacheDirectory).then(
-        files => {
-            files
-                .filter(file => !file.startsWith(filenamePrefix) && filenameRegex.test(file))
-                .forEach(file => {
-                    const filename = path.join(config.cacheDirectory, file);
-                    console.log(`Deleting ${filename}`);
-                    fs.unlink(filename).catch(error => console.log(`Could not delete ${filename}\n\t${error}`));
-                });
-        },
+        files => files
+            .filter(file => file.endsWith(".json"))
+            .forEach(file => {
+                const filename = path.join(config.cacheDirectory, file);
+                console.log(`Deleting ${filename}`);
+                fs.unlink(filename).catch(error => console.log(`Could not delete ${filename}\n\t${error}`));
+            }),
         error => {
             console.log(`Could not read cached files in '${config.cacheDirectory}\n\t${error}'`);
         }
     );
-};
+}
 
-setInterval(processCalendars, 1000 * 60 * config.generateInterval);
-setInterval(clearCache, 1000 * 60 * config.cacheClearInterval);
+const regenerate = () => {
+    clearCache();
+    processCalendars();
+}
+
+setInterval(regenerate, 1000 * 60 * config.regenerateInterval);
 
 processCalendars();
 fsSync.watchFile("calendars.json", { interval: (config.configReloadInterval ?? 10) * 1000}, (current, previous) => {
