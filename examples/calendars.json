@@ -1,12 +1,11 @@
 [
     {
-        "url": "https://cloud.timeedit.net/chalmers/web/public/ri617QQQY83Zn4Q5868548Z5y6Z55.ics",
+        "urls": [
+            "https://cloud.timeedit.net/chalmers/web/public/ri617QQQY83Zn4Q5868548Z5y6Z55.ics"
+        ],
         "name": "example",
         "rules": [
             {
-                "include": {
-                    "other": [ "Laboration", "T4-Varmluftsmotorn" ]
-                },
                 "exclude": {
                     "dates": [ "2024-11-25 17:15", "2024-12-13 17:15" ]
                 }
@@ -18,8 +17,6 @@
                 "course":      "$code$",
                 "courseSep":   ", ",
                 "description": "$heading$",
-                "summary":     "$courses$: $other$",
-                "otherSep":    ", ",
                 "room":        "$room$: $building$ våning $floor$",
                 "roomSep":     ", ",
                 "rooms":       "$rooms$"
