@@ -114,7 +114,7 @@ events that don't match either. The produces calendar will be named
 ```json
 {
     "name": "example"
-    "urls": [ "https://www.example.com/calendar.ics", ]
+    "urls": [ "https://www.example.com/calendar.ics" ]
     "rules": [
         {
             "exclude": {
