@@ -147,10 +147,8 @@ docker compose -f examples/docker-compose.yml up
 
 ## TODO
 
-* Use `X-PUBLISHED-TTL` from source calendars to know when to evict the cache
-  and regenerate calendars.
 * Implement recurrence rules.
-* Allow using multiple calendars as sources for one generated calendar.
 * Allow specifying common formatting rules at the calendar level so you don't
   have to repeat them per rule.
-* Allow more placeholders in format-strings.
+* Allow for more expressive formatting rules, like only including certain text
+  if a field is present.
