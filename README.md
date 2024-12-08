@@ -71,22 +71,31 @@ unwanted events.
 The fields take a string pattern that can contain the following placeholders:
 
 * `$courses$`: The courses that this event belongs to.
-* `$heading$`: What the event is about. This matches with the "Rubrik" field on
+* `$header$`: What the event is about. This matches with the "Rubrik" field on
   TimeEdit.
+* `$activity$`: What will happen at this event.
+* `$comment$`: Additional information about this event.
 * `$rooms$`: Which rooms the event takes place in.
+* `$classes$`: Which classes this event is for.
+* `$group$`: Which group the event is for.
+* `$staff$`: Which staff will be present during the event.
 
 You can also specify how rooms are formatted with the following options:
 
-* `room`: Specifies how to format a single room. Can include `$room$`,
-  `$building$` and `$floor$` to specify which rooms it is. Note that all of
-  these aren't always available.
-* `roomSep`: Specifies the separator to use between rooms.
+* `room`: Specifies how to format a single room. Can include `$room$` and
+  `$building$` to specify which rooms it is.
+* `roomSep`: Specifies the separator to use between rooms if there are multiple
+  and defaults to ", ".
 
 There are similar formatting options for courses:
 
 * `course`: Specifies how to format a single course. Can include `$code$` and
   `$name$`.
-* `courseSep`: Specifies the separator to use between courses.
+* `courseSep`: Specifies the separator to use between courses if there are multiple
+  and defaults to ", ".
+
+Classes and staff also have separators (called `classSep` and `staffSep`
+respectively) and they both have default values of ", ".
 
 
 ### Rational
@@ -116,12 +125,12 @@ events that don't match either. The produces calendar will be named
             "include": {
                 "codes": [ "ABC123" ]
             },
-            "description": "$heading$",
-            "room":        "$room$: $building$ floor $floor$",
+            "description": "$header$",
+            "room":        "$room$: $building$",
             "rooms":       "$rooms$"
         }
         {
-            "room":      "$room$: $building$ floor $floor$",
+            "room":      "$room$: $building$",
             "roomSep":  "\n",
             "rooms":     "$rooms$"
         }

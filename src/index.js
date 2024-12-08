@@ -52,13 +52,28 @@ const getCalendar = async urls => {
 const matchesFilter = (event, filters) => {
     let passes = true;
 
-    if (filters.codes !== undefined) {
-        passes &= event.courses.some(entry => filters.codes.includes(entry.code));
-    }
-
-    if (filters.dates !== undefined) {
+    if (filters.dates) {
         passes &= filters.dates.map(date => Date.parse(date)).some(date => event.start <= date && date < event.end)
     }
+
+    const check = (field, accepted) => {
+        if (!accepted) {
+            return true;
+        }
+
+        return accepted.some(value => field.includes(value));
+    };
+
+    passes &= event.courses.some(({ code, name, }) => check(code, filters.codes));
+    passes &= event.courses.some(({ code, name, }) => check(name, filters.names));
+    passes &= check(event.header, filters.header);
+    passes &= check(event.activity, filters.activity);
+    passes &= check(event.comment, filters.comment);
+    passes &= event.rooms.some(({ room, building, }) => check(room, filters.rooms));
+    passes &= event.rooms.some(({ room, building, }) => check(building, filters.buildings));
+    passes &= event.classes.some(field => check(field, filters.classes));
+    passes &= check(event.group, filters.group);
+    passes &= event.staff.some(field => check(field, filters.staff));
 
     return passes;
 };
@@ -66,11 +81,11 @@ const matchesFilter = (event, filters) => {
 const matchesRule = (event, rule) => {
     let passes = true;
 
-    if (rule.include !== undefined) {
+    if (rule.include) {
         passes &= matchesFilter(event, rule.include);
     }
 
-    if (rule.exclude !== undefined) {
+    if (rule.exclude) {
         passes &= !matchesFilter(event, rule.exclude);
     }
 
@@ -80,24 +95,30 @@ const matchesRule = (event, rule) => {
 const processCalendar = ({ urls, name, rules, }) => getCalendar(urls)
     .then(events => events
         .map(event => ({ event: event, rule: rules.find(rule => matchesRule(event, rule)), }))
-        .filter(({ rule, }) => rule !== undefined && !(rule.summary === undefined && rule.description === undefined && rule.rooms === undefined))
+        .filter(({ rule, }) => rule && (rule.summary || rule.description || rule.rooms))
         .map(({ event, rule, }) => {
             const courses = event.courses
                 .map(course => (rule.course ?? "")
                     .replace(/\$code\$/g, course.code)
                     .replace(/\$name\$/g, course.name))
-                .join(rule.courseSep);
-            const rooms = (event.rooms ?? "")
+                .join(rule.courseSep ?? ", ");
+            const rooms = (event.rooms ?? [])
                 .map(entry => rule.room
                     .replace(/\$room\$/g,     entry.room)
-                    .replace(/\$floor\$/g,    entry.floor)
                     .replace(/\$building\$/g, entry.building))
-                .join(rule.roomSep);
+                .join(rule.roomSep ?? ", ");
+            const classes = (event.classes ?? "").join(rule.classSep ?? ", ");
+            const staff = (event.staff ?? "").join(rule.staffSep ?? ", ");
 
             const fillPattern = pattern => (pattern ?? "")
-                .replace(/\$courses\$/g, courses)
-                .replace(/\$heading\$/g, event.heading)
-                .replace(/\$rooms\$/g,   rooms);
+                .replace(/\$courses\$/g,  courses)
+                .replace(/\$header\$/g,   event.header)
+                .replace(/\$activity\$/g, event.activity)
+                .replace(/\$comment\$/g,  event.comment)
+                .replace(/\$rooms\$/g,    rooms)
+                .replace(/\$classes\$/g,  classes)
+                .replace(/\$group\$/g,    event.group)
+                .replace(/\$staff\$/g,    event.staff);
 
             return {
                 summary:     fillPattern(rule.summary),
@@ -109,26 +130,35 @@ const processCalendar = ({ urls, name, rules, }) => getCalendar(urls)
         })
     )
     .then(events => {
-        const escape = string => string.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
         const formatDate = date => date.toISOString().replace(/[-:]|(\.\d{3})/g, "");
         const generationTime = formatDate(new Date());
         const hostID = escape(os.hostname());
 
         let output = "";
+
+        const outputField = (field, string) => {
+            if (string.length === 0) {
+                return;
+            }
+
+            const escaped = string.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+            output += `${field}:${escaped}\r\n`;
+        };
+
         output += "BEGIN:VCALENDAR\r\n";
         output += "VERSION:2.0\r\n";
         output += "METHOD:PUBLISH\r\n";
-        output += `X-WR-CALNAME:${escape(name)}\r\n`
-        output += `X-PUBLISHED-TTL:P${config.generateInterval}M\r\n`
+        outputField("X-WR-CALNAME", name);
+        output += `X-PUBLISHED-TTL:P${config.regenerateInterval}M\r\n`
         output += "CALSCALE:GREGORIAN\r\n";
         output += `PRODID:Schedule\r\n`
         events.forEach(({ summary, description, rooms, start, end, }, index) => {
             output += "BEGIN:VEVENT\r\n";
             output += `DTSTART:${formatDate(start)}\r\n`;
             output += `DTEND:${formatDate(end)}\r\n`;
-            output += `SUMMARY:${escape(summary)}\r\n`;
-            output += `DESCRIPTION:${escape(description)}\r\n`;
-            output += `LOCATION:${escape(rooms)}\r\n`;
+            outputField("SUMMARY", summary);
+            outputField("DESCRIPTION", description);
+            outputField("LOCATION", rooms);
             output += `UID:${generationTime}-${escape(name)}-${index}@${hostID}\r\n`;
             output += `DTSTAMP:${generationTime}\r\n`;
             output += `LAST-MODIFIED:${generationTime}\r\n`;
@@ -152,6 +182,7 @@ const processCalendars = () => {
             }
         )
         .then(calendars => calendars.forEach(processCalendar))
+        .catch(reason => console.log(`Could not read 'calendars.json':\n${reason}`));
 };
 
 const clearCache = () => {

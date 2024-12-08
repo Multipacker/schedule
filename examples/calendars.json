@@ -6,8 +6,11 @@
         "name": "example",
         "rules": [
             {
+                "include": {
+                    "activity": [ "T4-Varmluftsmotorn" ]
+                },
                 "exclude": {
-                    "dates": [ "2024-11-25 17:15", "2024-12-13 17:15" ]
+                    "group": [ "GRUPP 010" ]
                 }
             },
             {
@@ -15,17 +18,15 @@
                     "codes": [ "DAT038", "TIF085" ]
                 },
                 "course":      "$code$",
-                "courseSep":   ", ",
-                "description": "$heading$",
-                "room":        "$room$: $building$ våning $floor$",
-                "roomSep":     ", ",
+                "summary":     "$courses$: $activity$",
+                "description": "$header$\n$comment$",
+                "room":        "$room$",
                 "rooms":       "$rooms$"
             },
             {
-                "summary":     "$rawSummary$",
-                "description": "$rawDescription$",
-                "room":        "$room$: $building$ våning $floor$",
-                "roomSep":     "\n",
+                "summary":     "$comment$",
+                "description": "$activity$",
+                "room":        "$room$",
                 "rooms":       "$rooms$"
             }
         ]

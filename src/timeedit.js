@@ -224,17 +224,17 @@ const getEvents = urls => {
         .then(data => parseCsv(data, 3))
         .then(records => records.map(record => {
             // TODO(simon): Maybe validate all data first
-            const codes  = record.get("Kurskod").split(",");
-            const names  = record.get("Kursnamn").split(",");
-            const rooms  = record.get("Rum").split(",");
-            const houses = record.get("Hus").split(",");
+            const codes     = record.get("Kurskod").split(",");
+            const names     = record.get("Kursnamn").split(",");
+            const rooms     = record.get("Rum").split(",");
+            const buildings = record.get("Hus").split(",");
 
             if (codes.length !== names.length) {
                 throw new Error(`The number of course codes and course names differ. ${codes.length} course codes and ${names.length} course names.`);
             }
 
-            if (rooms.length !== houses.length) {
-                throw new Error(`The number of rooms and houses differ. ${rooms.length} houses and ${houses.length} houses.`);
+            if (rooms.length !== buildings.length) {
+                throw new Error(`The number of rooms and buildings differ. ${rooms.length} rooms and ${buildings.length} buildings.`);
             }
 
             return {
@@ -242,14 +242,14 @@ const getEvents = urls => {
                 // Currently they are fixed at UTC+1.
                 start:    new Date(`${record.get("Startdatum")}T${record.get("Starttid")}+01:00`),
                 end:      new Date(`${record.get("Slutdatum")}T${record.get("Sluttid")}+01:00`),
-                courses:  codes.map((code, index) => ({ code: code, name: names[index], })),
+                courses:  codes.map((code, index) => ({ code: code, name: names[index], })).filter(({ code, name, }) => code.length !== 0 || name.length !== 0),
                 header:   record.get("Rubrik"),
                 activity: record.get("Aktivitet"),
                 comment:  record.get("Bokningskommentar"),
-                rooms:    rooms.map((room, index) => ({ room: room, house: houses[index], })),
-                classes:  record.get("Klass").split(","),
+                rooms:    rooms.map((room, index) => ({ room: room, building: buildings[index], })).filter(({ room, building }) => room.length !== 0 || building.length !== 0),
+                classes:  record.get("Klass").split(",").filter(name => name.length !== 0),
                 group:    record.get("Undergrupp"),
-                staff:    record.get("Personal").split(","),
+                staff:    record.get("Personal").split(",").filter(name => name.length !== 0),
                 // TODO(simon): Exam
                 // TODO(simon): Exam type
             };
