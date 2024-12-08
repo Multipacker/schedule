@@ -39,7 +39,7 @@ which has the following fields:
 * `name`: The base name for the generated file.
 * `rules`: Specifies which events from the source calendar get included in the
   generated one and how information about an event is presented.
-* `url`: The URL to download the calendar from.
+* `urls`: An array of URLs to download calendars from.
 
 Rules are applied in order from first to last, and an event will use the first
 rule that it matches. This means that more specific rules should be placed
@@ -85,17 +85,17 @@ You can also specify how rooms are formatted with the following options:
 * `room`: Specifies how to format a single room. Can include `$room$` and
   `$building$` to specify which rooms it is.
 * `roomSep`: Specifies the separator to use between rooms if there are multiple
-  and defaults to ", ".
+  and defaults to `, `.
 
 There are similar formatting options for courses:
 
 * `course`: Specifies how to format a single course. Can include `$code$` and
   `$name$`.
 * `courseSep`: Specifies the separator to use between courses if there are multiple
-  and defaults to ", ".
+  and defaults to `, `.
 
 Classes and staff also have separators (called `classSep` and `staffSep`
-respectively) and they both have default values of ", ".
+respectively) and they both have default values of `, `.
 
 
 ### Rational
