@@ -1,5 +1,13 @@
 import { parseCsv } from "./csv.js";
 
+/*
+ * Explanation of the various fields you can send to TimeEdit:
+ * * sid = must be equal to 3 (not sure what it is)
+ * * p = how many weeks forward you want to get. 0 means just this week
+ *       ("period", probably)
+ * * objects = comma separated list of calendars to retrieve
+ */
+
 const tabledata = [
     [ 'h=t&sid=',           '6='  ],
     [ 'objects=',           '1='  ],
@@ -215,7 +223,7 @@ const encode = keyValues => {
 const getEvents = urls => {
     const parameters = urls.map(decode);
     const objects = parameters.flatMap(parameters => parameters.get("objects").split(","));
-    const url = encode([ `objects=${objects.join(",")}`, "sid=3", ]);
+    const url = encode([ "sid=3", "p=4", `objects=${objects.join(",")}`, ]);
 
     console.log(`Downloading calendar from ${url}.`);
 
