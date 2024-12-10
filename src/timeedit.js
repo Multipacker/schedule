@@ -48,7 +48,7 @@ const untablespecial = result => {
 
 const unmodKey = ch => {
     if (ch >= 97 && ch <= 122) {
-        return (97 + (ch - 97 + 9) % 26);
+        return (97 + (ch - 97 + 17) % 26);
     }
     if (ch >= 49 && ch <= 57) {
         return (49 + (ch - 49 + 5) % 9);
@@ -81,7 +81,7 @@ const swap = (result, from, to) => {
 }
 
 const unswapPattern = result => {
-    for (let step = 0; step < result.length; step++) {
+    for (let step = result.length - 1; step >= 0; --step) {
         for (let index = pattern.length - 1; index >= 1; index -= 2) {
             swap(
                 result,
@@ -142,7 +142,7 @@ const scrambleChar = ch => {
 }
 
 const swapPattern = result => {
-    for (let step = 0; step < result.length; step++) {
+    for (let step = 0; step < result.length; ++step) {
         for (let index = 1; index < pattern.length; index += 2) {
             swap(
                 result,
