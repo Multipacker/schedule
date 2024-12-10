@@ -57,30 +57,33 @@ const matchesFilter = (event, filters) => {
     }
 
     const check = (field, accepted) => {
-        if (!accepted) {
+        if (!accepted || accepted.length === 0) {
             return true;
         }
-
 
         return accepted.some(value => field.includes(value));
     };
 
-    if (event.courses.length !== 0) {
+    if (filters.codes && filters.codes.length !== 0) {
         passes &= event.courses.some(({ code, name, }) => check(code, filters.codes));
+    }
+    if (filters.names && filters.names.length !== 0) {
         passes &= event.courses.some(({ code, name, }) => check(name, filters.names));
     }
     passes &= check(event.header, filters.header);
     passes &= check(event.activity, filters.activity);
     passes &= check(event.comment, filters.comment);
-    if (event.rooms.length !== 0) {
+    if (filters.rooms && filters.rooms.length !== 0) {
         passes &= event.rooms.some(({ room, building, }) => check(room, filters.rooms));
+    }
+    if (filters.buildings && filters.buildings.length !== 0) {
         passes &= event.rooms.some(({ room, building, }) => check(building, filters.buildings));
     }
-    if (event.classes !== 0) {
+    if (filters.classes && filters.classes.length !== 0) {
         passes &= event.classes.some(field => check(field, filters.classes));
     }
     passes &= check(event.group, filters.group);
-    if (event.staff.length !== 0) {
+    if (filters.staff && filters.staff.length !== 0) {
         passes &= event.staff.some(field => check(field, filters.staff));
     }
 
