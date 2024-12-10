@@ -61,19 +61,28 @@ const matchesFilter = (event, filters) => {
             return true;
         }
 
+
         return accepted.some(value => field.includes(value));
     };
 
-    passes &= event.courses.some(({ code, name, }) => check(code, filters.codes));
-    passes &= event.courses.some(({ code, name, }) => check(name, filters.names));
+    if (event.courses.length !== 0) {
+        passes &= event.courses.some(({ code, name, }) => check(code, filters.codes));
+        passes &= event.courses.some(({ code, name, }) => check(name, filters.names));
+    }
     passes &= check(event.header, filters.header);
     passes &= check(event.activity, filters.activity);
     passes &= check(event.comment, filters.comment);
-    passes &= event.rooms.some(({ room, building, }) => check(room, filters.rooms));
-    passes &= event.rooms.some(({ room, building, }) => check(building, filters.buildings));
-    passes &= event.classes.some(field => check(field, filters.classes));
+    if (event.rooms.length !== 0) {
+        passes &= event.rooms.some(({ room, building, }) => check(room, filters.rooms));
+        passes &= event.rooms.some(({ room, building, }) => check(building, filters.buildings));
+    }
+    if (event.classes !== 0) {
+        passes &= event.classes.some(field => check(field, filters.classes));
+    }
     passes &= check(event.group, filters.group);
-    passes &= event.staff.some(field => check(field, filters.staff));
+    if (event.staff.length !== 0) {
+        passes &= event.staff.some(field => check(field, filters.staff));
+    }
 
     return passes;
 };
