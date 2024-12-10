@@ -63,6 +63,13 @@ const matchesFilter = (event, filters) => {
 
         return accepted.some(value => field.includes(value));
     };
+    const checkArray = (fields, accepted) => {
+        if (!accepted || accepted.length === 0) {
+            return true;
+        }
+
+        return fields.some(field => accepted.some(value => field.includes(value)));
+    };
 
     if (filters.codes && filters.codes.length !== 0) {
         passes &= event.courses.some(({ code, name, }) => check(code, filters.codes));
@@ -79,13 +86,9 @@ const matchesFilter = (event, filters) => {
     if (filters.buildings && filters.buildings.length !== 0) {
         passes &= event.rooms.some(({ room, building, }) => check(building, filters.buildings));
     }
-    if (filters.classes && filters.classes.length !== 0) {
-        passes &= event.classes.some(field => check(field, filters.classes));
-    }
+    passes &= checkArray(event.classes, filters.classes);
     passes &= check(event.group, filters.group);
-    if (filters.staff && filters.staff.length !== 0) {
-        passes &= event.staff.some(field => check(field, filters.staff));
-    }
+    passes &= checkArray(event.staff, filters.staff);
 
     return passes;
 };
