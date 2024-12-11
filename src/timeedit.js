@@ -120,11 +120,11 @@ const unscramble = query => {
     if (query.substring(0, 2) === 'i=') {
         return query;
     }
-    let result = encodeURIComponent(query);
+    let result = decodeURIComponent(query);
     result = untablespecial(result);
     result = unswapChar(result);
     result = untableshort(result);
-    return decodeURIComponent(result);
+    return result;
 }
 
 const modKey = ch => {
@@ -190,8 +190,7 @@ const scramble = query => {
     if (query.substring(0, 2) === 'i=') {
         return query;
     }
-    let result = decodeURIComponent(query);
-    result = tableshort(result);
+    let result = tableshort(query);
     result = swapChar(result);
     result = tablespecial(result);
     return encodeURIComponent(result);
