@@ -5,6 +5,8 @@
         ],
         "name": "example",
         "rules": [
+            // Remove every event that is an "T4-Varmluftsmotorn" activity that
+            // isn't for group "GRUPP 010".
             {
                 "include": {
                     "activity": [ "T4-Varmluftsmotorn" ]
@@ -13,6 +15,10 @@
                     "group": [ "GRUPP 010" ]
                 }
             },
+            // Include two courses by code and setup formatting for them. Note
+            // that any "T4-Varmluftsmotorn" activities for group "GRUPP 010"
+            // that is associated with one of these codes will be included in
+            // this rule.
             {
                 "include": {
                     "codes": [ "DAT038", "TIF085" ]
@@ -23,6 +29,8 @@
                 "room":        "$room$",
                 "rooms":       "$rooms$"
             },
+            // Catch all with somewhat reasonable formatting in case there are
+            // other events.
             {
                 "summary":     "$comment$",
                 "description": "$activity$",

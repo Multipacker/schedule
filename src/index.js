@@ -4,16 +4,16 @@ import fsSync from "node:fs";
 import os     from "os";
 import path   from "path";
 
-import { getEvents } from "./timeedit.js";
+import { getEvents }     from "./timeedit.js";
+import { stripComments } from "./config.js";
 
-const config = await fs.readFile("config.json")
-    .then(
-        JSON.parse,
-        error => {
-            console.log(`Could not load configuration file 'config.json'. Using default configuration\n\t${error}`);
-            return {};
-        }
-    )
+const config = await fs.readFile("config.json", { encoding: "utf8", })
+    .then(stripComments)
+    .then(JSON.parse)
+    .catch(error => {
+        console.log(`Could not load configuration file 'config.json'. Using default configuration\n\t${error}`);
+        return {};
+    })
     // NOTE(simon): Fill in defaults for values that are not specified.
     .then(data => ({
         cacheDirectory:     data.cacheDirectory     ?? ".",
@@ -188,14 +188,13 @@ const processCalendar = ({ urls, name, rules, }) => getCalendar(urls)
 
 const processCalendars = () => {
     console.log("Generating calendars");
-    fs.readFile("calendars.json", "utf8")
-        .then(
-            JSON.parse,
-            error => {
-                console.log(`Could not read 'calendars.json'\n\t${error}`);
-                return [];
-            }
-        )
+    fs.readFile("calendars.json", { encoding: "utf8", })
+        .then(stripComments)
+        .then(JSON.parse)
+        .catch(error => {
+            console.log(`Could not read 'calendars.json'\n\t${error}`);
+            return [];
+        })
         .then(calendars => calendars.forEach(processCalendar))
         .catch(reason => console.log(`Could not read 'calendars.json':\n${reason}`));
 };

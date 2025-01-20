@@ -6,7 +6,43 @@ published by Chalmers on
 thus capable of parsing out more information than what is provided by the iCal
 format.
 
+## Running
+
+Note that before you can run the program, you need to configure it, which is
+covered in the next section. The program can be run locally with `npm run
+start`. If you want a minified version, you can instead run the following:
+
+```sh
+npm install
+npm run build
+```
+
+This will give you a minified JavaScript file located in `dist/index.js` that
+can be run with NodeJS. In the examples directory is an example docker-compose
+file that also configures nginx for serving the generated calendars.
+
 ## Configuration
+
+All configuration files are written in JSON with added support for comments.
+Both single-line and multi-line comments are supported. There is also support
+for nested comments. Here is a sample:
+
+```json
+// Single-line comment
+
+/*
+   Multi-line
+   comment
+ */
+
+/*
+   Nested
+   /*
+        Multi-line
+    */
+   comments
+ */
+```
 
 There are some general settings that can be configured in `config.json`. This
 configuration is not hot-reloadable and needs a restart to apply. It consist of
