@@ -5,29 +5,25 @@
             "https://cloud.timeedit.net/chalmers/web/public/ri6u7YQQZ9QZnZQ5be44Q8Z35610y.ics"
         ],
         "rules": [
-            // Remove every event that is an "T4-Varmluftsmotorn" activity that
-            // isn't for group "GRUPP 010".
+            // Only include these two courses and anything that isn't a course.
             {
                 "include": {
                     "Kurs kod": [ "LMA017", "SSY081", "" ]
                 }
             },
-            // Include two courses by code and setup formatting for them. Note
-            // that any "T4-Varmluftsmotorn" activities for group "GRUPP 010"
-            // that is associated with one of these codes will be included in
-            // this rule.
+            // Set the location for all events.
             {
                 "include": "*",
                 "location": "$[Lokalnamn]"
             },
-            // Catch all with somewhat reasonable formatting in case there are
-            // other events.
+            // Set summary and description for things that aren't courses.
             {
                 "include": { "Kurs kod": "" },
                 "summary":     "$[Titel]",
                 "description": "$[Kommentar]"
                 
             },
+            // Set formatting for courses.
             {
                 "include": { "Kurs kod": "*" },
                 "summary": "$[Titel,Activity>: ]"
