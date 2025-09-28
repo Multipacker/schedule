@@ -1,33 +1,36 @@
 [
     {
-        "urls": [
-            "https://cloud.timeedit.net/chalmers/web/public/ri617QQQY83Zn4Q5868548Z5y6Z55.ics"
-        ],
         "name": "example",
+        "urls": [
+            "https://cloud.timeedit.net/chalmers/web/public/ri6u7YQQZ9QZnZQ5be44Q8Z35610y.ics"
+        ],
         "rules": [
             {
                 "include": {
-                    "activity": [ "T4-Varmluftsmotorn" ]
-                },
-                "exclude": {
-                    "group": [ "GRUPP 010" ]
+                    "Kurs kod": [ "LMA017", "SSY081", "" ]
                 }
             },
             {
-                "include": {
-                    "codes": [ "DAT038", "TIF085" ]
-                },
-                "course":      "$code$",
-                "summary":     "$courses$: $activity$",
-                "description": "$header$\n$comment$",
-                "room":        "$room$",
-                "rooms":       "$rooms$"
+                "include": "*",
+                "location": "$[Lokalnamn]"
             },
             {
-                "summary":     "$comment$",
-                "description": "$activity$",
-                "room":        "$room$",
-                "rooms":       "$rooms$"
+                "include": { "Kurs kod": "" },
+                "summary":     "$[Titel]",
+                "description": "$[Kommentar]"
+                
+            },
+            {
+                "include": { "Kurs kod": "*" },
+                "summary": "$[Titel,Activity>: ]"
+            },
+            {
+                "include": { "Kurs kod": "LMA017" },
+                "summary": "$[summary]LMA017"
+            },
+            {
+                "include": { "Kurs kod": "SSY081" },
+                "summary": "$[summary]SSY081"
             }
         ]
     }

@@ -52,43 +52,39 @@ const getCalendar = async urls => {
 const matchesFilter = (event, filters) => {
     let passes = true;
 
-    if (filters.dates) {
-        passes &= filters.dates.map(date => Date.parse(date)).some(date => event.start <= date && date < event.end)
-    }
+    if (filters === "") {
+        return false;
+    } else if (filters === "*") {
+        return true;
+    } else {
+        for (const filter in filters) {
+            const values = typeof(filters[filter]) === "string" ? [filters[filter]] : filters[filter];
 
-    const check = (field, accepted) => {
-        if (!accepted || accepted.length === 0) {
-            return true;
+            if (filter == "dates") {
+                passes &= values.some(value => {
+                    if (value === "") {
+                        return false;
+                    } else if (value === "*") {
+                        return true;
+                    } else {
+                        const date = Date.parse(date);
+                        return event.start <= date && date < event.end;
+                    }
+                });
+            } else {
+                const column = (event.columns[filter] ?? "").toLowerCase();
+                passes &= values.some(value => {
+                    if (value === "") {
+                        return column.length === 0;
+                    } else if (value === "*") {
+                        return true;
+                    } else {
+                        return column.includes(value.toLowerCase());
+                    }
+                });
+            }
         }
-
-        return accepted.some(value => field.includes(value));
-    };
-    const checkArray = (fields, accepted) => {
-        if (!accepted || accepted.length === 0) {
-            return true;
-        }
-
-        return fields.some(field => accepted.some(value => field.includes(value)));
-    };
-
-    if (filters.codes && filters.codes.length !== 0) {
-        passes &= event.courses.some(({ code, name, }) => check(code, filters.codes));
     }
-    if (filters.names && filters.names.length !== 0) {
-        passes &= event.courses.some(({ code, name, }) => check(name, filters.names));
-    }
-    passes &= check(event.header, filters.header);
-    passes &= check(event.activity, filters.activity);
-    passes &= check(event.comment, filters.comment);
-    if (filters.rooms && filters.rooms.length !== 0) {
-        passes &= event.rooms.some(({ room, building, }) => check(room, filters.rooms));
-    }
-    if (filters.buildings && filters.buildings.length !== 0) {
-        passes &= event.rooms.some(({ room, building, }) => check(building, filters.buildings));
-    }
-    passes &= checkArray(event.classes, filters.classes);
-    passes &= check(event.group, filters.group);
-    passes &= checkArray(event.staff, filters.staff);
 
     return passes;
 };
@@ -107,52 +103,75 @@ const matchesRule = (event, rule) => {
     return passes;
 };
 
+const expandPatternString = (event, pattern) => {
+    return pattern.replaceAll(/\$\[(.*)\]/g, (match, pattern) => {
+        let indexOfColumnStart = pattern.indexOf("<");
+        let indexOfColumnEnd   = pattern.indexOf(">");
+        if (indexOfColumnEnd === -1) {
+            indexOfColumnEnd = pattern.length;
+        }
+
+        const head = pattern.substring(0, indexOfColumnStart);
+        const columnHeaders = pattern.substring(1 + indexOfColumnStart, indexOfColumnEnd).split(",");
+        const tail = pattern.substring(1 + indexOfColumnEnd);
+
+        const text = columnHeaders
+            .map(header => {
+                if (header === "summary") {
+                    return event.summary ?? "";
+                } else if (header === "description") {
+                    return event.description ?? "";
+                } else if (header === "location") {
+                    return event.location ?? "";
+                } else {
+                    return event.columns[header] ?? "";
+                }
+            })
+            .filter(column => column.length !== 0)
+            .join(", ");
+
+        return head + text + tail;
+    });
+};
+
 const processCalendar = ({ urls, name, rules, }) => getCalendar(urls)
     .then(events => events
-        .map(event => ({ event: event, rule: rules.find(rule => matchesRule(event, rule)), }))
-        .filter(({ rule, }) => rule && (rule.summary || rule.description || rule.rooms))
-        .map(({ event, rule, }) => {
-            const courses = event.courses
-                .map(course => (rule.course ?? "")
-                    .replace(/\$code\$/g, course.code)
-                    .replace(/\$name\$/g, course.name))
-                .join(rule.courseSep ?? ", ");
-            const rooms = (event.rooms ?? [])
-                .map(entry => rule.room
-                    .replace(/\$room\$/g,     entry.room)
-                    .replace(/\$building\$/g, entry.building))
-                .join(rule.roomSep ?? ", ");
-            const classes = (event.classes ?? "").join(rule.classSep ?? ", ");
-            const staff = (event.staff ?? "").join(rule.staffSep ?? ", ");
+        .map(event => {
+            for (const rule of rules) {
+                const matches = matchesRule(event, rule);
+                const isFilter = !rule.summary && !rule.description && !rule.location;
 
-            const fillPattern = pattern => (pattern ?? "")
-                .replace(/\$courses\$/g,  courses)
-                .replace(/\$header\$/g,   event.header)
-                .replace(/\$activity\$/g, event.activity)
-                .replace(/\$comment\$/g,  event.comment)
-                .replace(/\$rooms\$/g,    rooms)
-                .replace(/\$classes\$/g,  classes)
-                .replace(/\$group\$/g,    event.group)
-                .replace(/\$staff\$/g,    event.staff);
+                if (isFilter && !matches) {
+                    event.delete = true;
+                }
 
-            return {
-                summary:     fillPattern(rule.summary),
-                description: fillPattern(rule.description),
-                rooms:       fillPattern(rule.rooms),
-                start:       event.start,
-                end:         event.end,
-            };
+                if (matches && rule.summary) {
+                    event.summary = expandPatternString(event, rule.summary);
+                }
+
+                if (matches && rule.description) {
+                    event.description = expandPatternString(event, rule.description);
+                }
+
+                if (matches && rule.location) {
+                    event.location = expandPatternString(event, rule.location);
+                }
+            }
+
+            return event;
         })
+        .filter(event => !event.delete)
     )
     .then(events => {
-        const formatDate = date => date.toISOString().replace(/[-:]|(\.\d{3})/g, "");
+        const zeroPad = (num, length) => String(num).padStart(length, "0");
+        const formatDate = date => zeroPad(date.getUTCFullYear(), 4) + zeroPad(1 + date.getUTCMonth(), 2) + zeroPad(date.getUTCDate(), 2) + "T" + zeroPad(date.getUTCHours(), 2) + zeroPad(date.getUTCMinutes(), 2) + zeroPad(date.getUTCSeconds(), 2) + "Z";
         const generationTime = formatDate(new Date());
         const hostID = escape(os.hostname());
 
         let output = "";
 
         const outputField = (field, string) => {
-            if (string.length === 0) {
+            if (!string || string.length === 0) {
                 return;
             }
 
@@ -167,13 +186,13 @@ const processCalendar = ({ urls, name, rules, }) => getCalendar(urls)
         output += `X-PUBLISHED-TTL:P${config.regenerateInterval}M\r\n`
         output += "CALSCALE:GREGORIAN\r\n";
         output += `PRODID:Schedule\r\n`
-        events.forEach(({ summary, description, rooms, start, end, }, index) => {
+        events.forEach(({ summary, description, location, start, end, }, index) => {
             output += "BEGIN:VEVENT\r\n";
             output += `DTSTART:${formatDate(start)}\r\n`;
             output += `DTEND:${formatDate(end)}\r\n`;
             outputField("SUMMARY", summary);
             outputField("DESCRIPTION", description);
-            outputField("LOCATION", rooms);
+            outputField("LOCATION", location);
             output += `UID:${generationTime}-${escape(name)}-${index}@${hostID}\r\n`;
             output += `DTSTAMP:${generationTime}\r\n`;
             output += `LAST-MODIFIED:${generationTime}\r\n`;

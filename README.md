@@ -41,61 +41,53 @@ which has the following fields:
   generated one and how information about an event is presented.
 * `urls`: An array of URLs to download calendars from.
 
-Rules are applied in order from first to last, and an event will use the first
-rule that it matches. This means that more specific rules should be placed
-earlier than more generic ones. In order to select which rule to use, there are
-inclusion and exclusion filters. You have to pass the inclusion filter and fail
-the exclusion filter to be included in the rule. You can specify one, both or
-neither of these. If you don't specify either, all events will match the rule
-and any following rules can never be reached. The rational for this system will
-be explained later.
+Rules are applied in order from first to last, and an event will use all rules
+that it matches. In order to select which rules to use, there are inclusion and
+exclusion filters. You have to pass the inclusion filter and fail the exclusion
+filter to be included in the rule. You can specify one, both, or neither of
+these. If you don't specify either, all events will match the rule. The
+rational for this system will be explained later.
 
 The two filters use the same format, and consist of objects with arrays of data
-that is used for matching. To pass a filter, an event has to contain at least
-one item from each specified array. The available arrays are:
+that is used for matching. The fields specify what to match on, and the array
+specifies the accepted substrings. To pass a filter, an event has to have at
+least one item from each specified array as a substring.
 
-* `codes`: Course codes.
-* `dates`: Dates.
+The available fields can be seen either by looking at the log after the program
+has downloaded a calendar, or you can look at TimeEdit and use the same names
+that you see on the left hand side when you click on an event. There is also a
+special field called `dates` that only passes the filter if the event contains
+at least one of the specified dates.
+
+There are two special values for filters: `"*"` which matches anything but
+empty values, and `""` which only matches empty values. In the case that you
+only have one value, you can also omit the array and specify the value
+directly. Like this:
+
+```json
+"include": {
+    "dates": "2025-09-28 08:00"
+}
+```
 
 If an event matches a rule, it will use the formatting specified by the rule. The
 following fields of an event can be set:
 
 * `summary`: A short summary of the event.
 * `description`: A more detailed description of the event.
-* `rooms`: Where the event takes place.
+* `location`: Where the event takes place.
 
 You don't need to provide all of the fields, but if none are present, the event
-won't be added to the calendar. This can be combined with the filters to remove
-unwanted events.
+will be removed. The fields take a pattern string which allow for formatting
+with this syntax: `$[head text<Column 1,Column 2>tail text]`. The column names
+are looked up and the fields are joined separated by `, `. If the result is
+non-empty, the head text is inserted before the fields, and the tail text
+afterwards. Both the head text and the tail text can be omitted.
 
-The fields take a string pattern that can contain the following placeholders:
-
-* `$courses$`: The courses that this event belongs to.
-* `$header$`: What the event is about. This matches with the "Rubrik" field on
-  TimeEdit.
-* `$activity$`: What will happen at this event.
-* `$comment$`: Additional information about this event.
-* `$rooms$`: Which rooms the event takes place in.
-* `$classes$`: Which classes this event is for.
-* `$group$`: Which group the event is for.
-* `$staff$`: Which staff will be present during the event.
-
-You can also specify how rooms are formatted with the following options:
-
-* `room`: Specifies how to format a single room. Can include `$room$` and
-  `$building$` to specify which rooms it is.
-* `roomSep`: Specifies the separator to use between rooms if there are multiple
-  and defaults to `, `.
-
-There are similar formatting options for courses:
-
-* `course`: Specifies how to format a single course. Can include `$code$` and
-  `$name$`.
-* `courseSep`: Specifies the separator to use between courses if there are multiple
-  and defaults to `, `.
-
-Classes and staff also have separators (called `classSep` and `staffSep`
-respectively) and they both have default values of `, `.
+Note that whitespace is significant here. There are three special column names
+that are always allowed: `summary`, `description`, and `location`. These refer
+to the fields on the event itself and allows you to have rules that append to
+each other.
 
 
 ### Rational
@@ -108,7 +100,7 @@ from every rule.
 
 The following rules remove lab sessions that we aren't interested in, includes
 all remaining events that are part of a course, and provides a fallback for
-events that don't match either. The produces calendar will be named
+events that don't have a course code. The produced calendar will be named
 `example.ics`.
 
 ```json
@@ -122,17 +114,21 @@ events that don't match either. The produces calendar will be named
             }
         }
         {
-            "include": {
-                "codes": [ "ABC123" ]
-            },
-            "description": "$header$",
-            "room":        "$room$: $building$",
-            "rooms":       "$rooms$"
-        }
+            "location": "$[Lokalnamn]",
+        },
         {
-            "room":      "$room$: $building$",
-            "roomSep":  "\n",
-            "rooms":     "$rooms$"
+            "include": {
+                "Kurs kod": "ABC123"
+            },
+            "summary":     "ABC123",
+            "description": "$[Activity]",
+        },
+        {
+            "include": {
+                "Kurs kod": ""
+            },
+            "summary":     "$[Titel]",
+            "description": "$[Kommentar]",
         }
     ]
 }
@@ -150,5 +146,4 @@ docker compose -f examples/docker-compose.yml up
 * Implement recurrence rules.
 * Allow specifying common formatting rules at the calendar level so you don't
   have to repeat them per rule.
-* Allow for more expressive formatting rules, like only including certain text
-  if a field is present.
+* Allow for more expressive formatting rules.
