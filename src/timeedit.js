@@ -1,5 +1,3 @@
-import { parseCsv } from "./csv.js";
-
 /*
  * Explanation of the various fields you can send to TimeEdit:
  * * sid = must be equal to 3 (not sure what it is)
@@ -215,7 +213,7 @@ const decode = url => {
 
 const encode = keyValues => {
     const parameters = keyValues.map(value => value.replace(/[+]/g, ' ')).join('&');
-    const url = `https://cloud.timeedit.net/chalmers/web/public/ri${scramble(parameters)}.csv`;
+    const url = `https://cloud.timeedit.net/chalmers/web/public/ri${scramble(parameters)}.json`;
     return url;
 };
 
@@ -228,39 +226,28 @@ const getEvents = urls => {
 
     return fetch(url)
         .then(response => response.text())
-        .then(data => parseCsv(data, 3))
-        .then(records => records.map(record => {
-            // TODO(simon): Maybe validate all data first
-            const codes     = record.get("Kurskod").split(",");
-            const names     = record.get("Kursnamn").split(",");
-            const rooms     = record.get("Rum").split(",");
-            const buildings = record.get("Hus").split(",");
+        .then(JSON.parse)
+        .then(schedule => {
+            const column_names = schedule.columnheaders;
+            console.log(`Available column names are: ${column_names}`);
 
-            if (codes.length !== names.length) {
-                throw new Error(`The number of course codes and course names differ. ${codes.length} course codes and ${names.length} course names.`);
-            }
+            const events = schedule.reservations.map(event => {
+                let new_event = {
+                    start: new Date(event.startdate + "T" + event.starttime),
+                    end:   new Date(event.enddate   + "T" + event.endtime),
+                    columns: {},
+                };
 
-            if (rooms.length !== buildings.length) {
-                throw new Error(`The number of rooms and buildings differ. ${rooms.length} rooms and ${buildings.length} buildings.`);
-            }
+                const column_count = Math.min(column_names.length, event.columns.length);
+                for (let i = 0; i < column_count; ++i) {
+                    new_event.columns[column_names[i]] = event.columns[i];
+                }
 
-            return {
-                // TODO(simon): Timezones are annoying, what do we do with them?
-                // Currently they are fixed at UTC+1.
-                start:    new Date(`${record.get("Startdatum")}T${record.get("Starttid")}+01:00`),
-                end:      new Date(`${record.get("Slutdatum")}T${record.get("Sluttid")}+01:00`),
-                courses:  codes.map((code, index) => ({ code: code, name: names[index], })).filter(({ code, name, }) => code.length !== 0 || name.length !== 0),
-                header:   record.get("Rubrik"),
-                activity: record.get("Aktivitet"),
-                comment:  record.get("Bokningskommentar"),
-                rooms:    rooms.map((room, index) => ({ room: room, building: buildings[index], })).filter(({ room, building }) => room.length !== 0 || building.length !== 0),
-                classes:  record.get("Klass").split(",").filter(name => name.length !== 0),
-                group:    record.get("Undergrupp"),
-                staff:    record.get("Personal").split(",").filter(name => name.length !== 0),
-                // TODO(simon): Exam
-                // TODO(simon): Exam type
-            };
-        }));
+                return new_event;
+            });
+
+            return events;
+        });
 };
 
 export { getEvents };
