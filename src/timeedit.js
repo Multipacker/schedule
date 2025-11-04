@@ -3,7 +3,8 @@
  * * sid = must be equal to 3 (not sure what it is)
  * * p = how many weeks forward you want to get. 0 means just this week
  *       ("period", probably)
- * * objects = comma separated list of calendars to retrieve
+ * * objects = comma separated list of calendars to retrieve, -1 to union different objects
+ * * l = language (sv, en)
  */
 
 const tabledata = [
@@ -220,7 +221,7 @@ const encode = keyValues => {
 const getEvents = urls => {
     const parameters = urls.map(decode);
     const objects = parameters.flatMap(parameters => parameters.get("objects").split(","));
-    const url = encode([ "sid=3", "p=4", `objects=${objects.join(",")}`, ]);
+    const url = encode([ "sid=3", "p=4", `objects=${objects.join(",-1,")}`, ]);
 
     console.log(`Downloading calendar from ${url}.`);
 
