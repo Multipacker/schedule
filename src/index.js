@@ -239,11 +239,13 @@ const regenerate = () => {
     processCalendars();
 }
 
-setInterval(regenerate, 1000 * 60 * config.regenerateInterval);
+const regenerateInterval = setInterval(regenerate, 1000 * 60 * config.regenerateInterval);
 
 processCalendars();
 fsSync.watchFile("calendars.json", { interval: (config.configReloadInterval ?? 10) * 1000}, (current, previous) => {
     if (current.mtime > previous.mtime) {
         processCalendars();
     }
-});
+}).unref();
+
+process.on("SIGTERM", () => clearInterval(regenerateInterval));
