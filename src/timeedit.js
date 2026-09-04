@@ -252,3 +252,10 @@ const getEvents = urls => {
 };
 
 export { getEvents };
+
+// NOTE(simon): Re-exam schedule:
+// https://cloud.timeedit.net/chalmers/web/exampublic/ri1Q9.html
+//console.log(decode("https://cloud.timeedit.net/chalmers/web/exampublic/ri1Y84JXYq5ZY5Q3wYgwa16Y53Y3g3651YW1kj2Qn59nYx98905pXZF50608x351XYt63ZD8B4738DZg646tCQ95d0Q059E55Q5EFEDy0Db2vyQBZZD9Z04X7YfE7n6QX0vfQ80Y.csv"));
+//getEvents(["https://cloud.timeedit.net/chalmers/web/public/ri6u7YQQZ9QZnZQ5be44Q8Z35610y.ics"]).then(console.log);
+
+//console.log(decode("https://cloud.timeedit.net/chalmers/web/public/ri6575eQQn0ZbYQ99y56ZuQ75Z5Q8Z55.ics"));
